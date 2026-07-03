@@ -1,0 +1,240 @@
+:root {
+  --cream: #FAF6EC;
+  --cream-2: #F1EAD8;
+  --emerald: #0F3D3E;
+  --emerald-2: #14524F;
+  --emerald-3: #1B6B5A;
+  --gold: #C9A227;
+  --gold-light: #E7CE7A;
+  --ink: #1C2B2A;
+  --muted: #6C7A76;
+  --line: #DFD5B8;
+  --done: #1B6B5A;
+  --done-bg: #E4F0EA;
+  --font-tamil: 'Noto Sans Tamil', 'Segoe UI', sans-serif;
+  --font-display: 'Amiri', 'Noto Sans Tamil', serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-tamil);
+}
+
+#root {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px 16px 80px;
+}
+
+.pt-header {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.pt-crescent {
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 10px;
+  display: block;
+}
+
+.pt-title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--emerald);
+  margin: 0 0 4px;
+  letter-spacing: 0.3px;
+}
+
+.pt-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.pt-divider {
+  width: 100%;
+  height: 14px;
+  margin: 18px 0 24px;
+  opacity: 0.85;
+}
+
+.pt-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 26px;
+}
+
+.pt-stat-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.pt-stat-value {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--emerald);
+  display: block;
+}
+
+.pt-stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+  display: block;
+}
+
+.pt-progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--cream-2);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 28px;
+  border: 1px solid var(--line);
+}
+
+.pt-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--emerald-3), var(--gold));
+  transition: width 0.35s ease;
+}
+
+.pt-day-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.pt-day-card.pt-complete {
+  border-color: var(--gold-light);
+  background: #FFFDF6;
+}
+
+.pt-day-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.pt-day-date {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--emerald);
+}
+
+.pt-day-name {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pt-day-count {
+  font-size: 12px;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.pt-prayer-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.pt-prayer-btn {
+  border: 1px solid var(--line);
+  background: var(--cream);
+  border-radius: 10px;
+  padding: 8px 4px 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+  font-family: var(--font-tamil);
+}
+
+.pt-prayer-btn:hover {
+  border-color: var(--emerald-3);
+}
+
+.pt-prayer-btn.on {
+  background: var(--done-bg);
+  border-color: var(--done);
+}
+
+.pt-prayer-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: transparent;
+}
+
+.pt-prayer-btn.on .pt-prayer-dot {
+  background: var(--done);
+  border-color: var(--done);
+  color: #fff;
+}
+
+.pt-prayer-label {
+  font-size: 11px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.pt-prayer-btn.on .pt-prayer-label {
+  color: var(--done);
+}
+
+.pt-footer {
+  text-align: center;
+  margin-top: 28px;
+}
+
+.pt-reset {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: var(--font-tamil);
+}
+
+.pt-reset:hover {
+  border-color: #C0392B;
+  color: #C0392B;
+}
+
+.pt-note {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 10px;
+}
+
+@media (max-width: 420px) {
+  .pt-stats { grid-template-columns: repeat(2, 1fr); }
+  .pt-prayer-label { font-size: 9.5px; }
+  .pt-title { font-size: 24px; }
+}
