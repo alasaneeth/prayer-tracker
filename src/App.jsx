@@ -1,15 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 
-const STORAGE_KEY = 'prayerTrackerData_rolling48'
-const WINDOW_SIZE = 48 // மொத்தம் இத்தனை நாட்கள் தொடர்ந்து காட்டப்படும்
-
-function getTodayStr() {
-  const now = new Date()
-  const y = now.getFullYear()
-  const m = String(now.getMonth() + 1).padStart(2, '0')
-  const d = String(now.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
+const STORAGE_KEY = 'prayerTrackerData_2026_07'
+const START_DATE = '2026-07-04'
+const END_DATE = '2026-08-20' // 04-07-2026 முதல் 48 நாட்கள்
 
 const PRAYERS = [
   { id: 'fajr', label: 'பஜ்ர்' },
@@ -22,17 +15,16 @@ const PRAYERS = [
 const WEEKDAYS_TA = ['ஞாயிறு', 'திங்கள்', 'செவ்வாய்', 'புதன்', 'வியாழன்', 'வெள்ளி', 'சனி']
 const MONTHS_TA = ['ஜன', 'பிப்', 'மார்', 'ஏப்', 'மே', 'ஜூன்', 'ஜூலை', 'ஆக', 'செப்', 'அக்', 'நவ', 'டிச']
 
-// இன்றைய தேதியிலிருந்து பின்னோக்கி WINDOW_SIZE நாட்களை (இன்று உட்பட) உருவாக்கும்
-function generateRollingWindow(todayStr) {
+function generateDateRange(start, end) {
   const dates = []
-  const today = new Date(todayStr + 'T00:00:00')
-  for (let i = WINDOW_SIZE - 1; i >= 0; i--) {
-    const d = new Date(today)
-    d.setDate(d.getDate() - i)
-    const y = d.getFullYear()
-    const mm = String(d.getMonth() + 1).padStart(2, '0')
-    const dd = String(d.getDate()).padStart(2, '0')
-    dates.push(`${y}-${mm}-${dd}`)
+  let current = new Date(start + 'T00:00:00')
+  const last = new Date(end + 'T00:00:00')
+  while (current <= last) {
+    const y = current.getFullYear()
+    const m = String(current.getMonth() + 1).padStart(2, '0')
+    const d = String(current.getDate()).padStart(2, '0')
+    dates.push(`${y}-${m}-${d}`)
+    current.setDate(current.getDate() + 1)
   }
   return dates
 }
@@ -45,24 +37,7 @@ function formatDay(dateStr) {
   }
 }
 
-function formatFullDate(dateStr) {
-  const dateObj = new Date(dateStr + 'T00:00:00')
-  return `${String(dateObj.getDate()).padStart(2, '0')} ${MONTHS_TA[dateObj.getMonth()]} ${dateObj.getFullYear()}`
-}
-
-function emptyPrayerState() {
-  return {
-    fajr: false,
-    dhuhr: false,
-    asr: false,
-    maghrib: false,
-    isha: false,
-  }
-}
-
-// localStorage-ல் இருந்து தரவை படித்து, தற்போதைய 48-நாள் சாளரத்திற்கு
-// உட்பட்ட தேதிகளை மட்டும் வைத்துக்கொண்டு (48 நாட்களுக்கு மேல் பழையவை auto-delete)
-function loadWindowData(days) {
+function loadInitialData(days) {
   let saved = {}
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -72,46 +47,20 @@ function loadWindowData(days) {
   }
   const data = {}
   days.forEach((day) => {
-    data[day] = saved[day] || emptyPrayerState()
+    data[day] = saved[day] || {
+      fajr: false,
+      dhuhr: false,
+      asr: false,
+      maghrib: false,
+      isha: false,
+    }
   })
   return data
 }
 
 export default function App() {
-  const [today, setToday] = useState(getTodayStr)
-  const days = useMemo(() => generateRollingWindow(today), [today])
-  const [data, setData] = useState(() => loadWindowData(days))
-
-  // தேதி மாறும் போதெல்லாம் (நள்ளிரவைக் கடந்தால், அல்லது tab மீண்டும் திறக்கும் போது)
-  // சாளரத்தை மீண்டும் கணக்கிட்டு, 48 நாட்களுக்கு மேல் உள்ள பழைய தரவை நீக்கும்
-  useEffect(() => {
-    const checkDate = () => {
-      const current = getTodayStr()
-      setToday((prev) => (prev !== current ? current : prev))
-    }
-    const intervalId = setInterval(checkDate, 60 * 1000)
-    document.addEventListener('visibilitychange', checkDate)
-    window.addEventListener('focus', checkDate)
-    return () => {
-      clearInterval(intervalId)
-      document.removeEventListener('visibilitychange', checkDate)
-      window.removeEventListener('focus', checkDate)
-    }
-  }, [])
-
-  // சாளரம் மாறும் போது (இன்று புதுப்பிக்கப்படும் போது) தரவை புதிய சாளரத்திற்கு
-  // ஏற்றவாறு மீண்டும் கட்டமைக்கும் — பழைய தேதிகள் தானாக நீக்கப்படும்,
-  // புதிய தேதி தானாக சேர்க்கப்படும்
-  useEffect(() => {
-    setData((prev) => {
-      const next = {}
-      days.forEach((day) => {
-        next[day] = prev[day] || emptyPrayerState()
-      })
-      return next
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [today])
+  const days = useMemo(() => generateDateRange(START_DATE, END_DATE), [])
+  const [data, setData] = useState(() => loadInitialData(days))
 
   useEffect(() => {
     try {
@@ -135,7 +84,13 @@ export default function App() {
     if (window.confirm('எல்லா பதிவுகளையும் அழிக்கவா? இதை மீட்டெடுக்க முடியாது.')) {
       const cleared = {}
       days.forEach((day) => {
-        cleared[day] = emptyPrayerState()
+        cleared[day] = {
+          fajr: false,
+          dhuhr: false,
+          asr: false,
+          maghrib: false,
+          isha: false,
+        }
       })
       setData(cleared)
     }
@@ -174,9 +129,7 @@ export default function App() {
           <circle cx="38" cy="10" r="2.6" fill="#C9A227" />
         </svg>
         <h1 className="pt-title">தொழுகை பதிவேடு</h1>
-        <p className="pt-subtitle">
-          {formatFullDate(days[0])} &ndash; {formatFullDate(days[days.length - 1])} &middot; {WINDOW_SIZE} நாட்கள் &middot; தினமும் 5 வேளை தொழுகை
-        </p>
+        <p className="pt-subtitle">04 ஜூலை 2026 &ndash; 20 ஆகஸ்ட் 2026  &middot; 48 நாட்கள் &middot; தினமும் 5 வேளை தொழுகை</p>
       </header>
 
       <svg className="pt-divider" viewBox="0 0 600 14" preserveAspectRatio="none">
@@ -210,20 +163,19 @@ export default function App() {
       </div>
 
       <main>
-        {[...days].reverse().map((day) => {
+        {days.map((day) => {
           const { weekday, display } = formatDay(day)
           const doneCount = PRAYERS.filter((p) => data[day][p.id]).length
           const isComplete = doneCount === PRAYERS.length
-          const isToday = day === today
           return (
             <div
               key={day}
-              className={`pt-day-card${isComplete ? ' pt-complete' : ''}${isToday ? ' pt-today' : ''}`}
+              className={`pt-day-card${isComplete ? ' pt-complete' : ''}`}
             >
               <div className="pt-day-head">
                 <div>
                   <span className="pt-day-date">{display}</span>{' '}
-                  <span className="pt-day-name">({weekday}){isToday ? ' · இன்று' : ''}</span>
+                  <span className="pt-day-name">({weekday})</span>
                 </div>
                 <span className="pt-day-count">{doneCount}/5</span>
               </div>
