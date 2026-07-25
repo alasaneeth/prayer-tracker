@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 
 const STORAGE_KEY = 'prayerTrackerData_rolling48'
 const WINDOW_SIZE = 48 // மொத்தம் இத்தனை நாட்கள் தொடர்ந்து காட்டப்படும்
+const MOTIVATION_MESSAGE = 'அல்லாஹ் உங்களை பொருந்திக்கொள்வானாக'
 
 function getTodayStr() {
   const now = new Date()
@@ -82,6 +83,26 @@ export default function App() {
   const days = useMemo(() => generateRollingWindow(today), [today])
   const [data, setData] = useState(() => loadWindowData(days))
 
+  // ஒவ்வொரு தொழுகையும் complete ஆகும்போது காட்டப்படும் motivation toast
+  const [toast, setToast] = useState(null) // { id, key }
+  const toastTimerRef = useRef(null)
+  const toastIdRef = useRef(0)
+
+  const showMotivationToast = () => {
+    toastIdRef.current += 1
+    setToast({ id: toastIdRef.current })
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = setTimeout(() => {
+      setToast(null)
+    }, 2400)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    }
+  }, [])
+
   // தேதி மாறும் போதெல்லாம் (நள்ளிரவைக் கடந்தால், அல்லது tab மீண்டும் திறக்கும் போது)
   // சாளரத்தை மீண்டும் கணக்கிட்டு, 48 நாட்களுக்கு மேல் உள்ள பழைய தரவை நீக்கும்
   useEffect(() => {
@@ -122,13 +143,20 @@ export default function App() {
   }, [data])
 
   const togglePrayer = (day, prayerId) => {
-    setData((prev) => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        [prayerId]: !prev[day][prayerId],
-      },
-    }))
+    setData((prev) => {
+      const wasOn = prev[day][prayerId]
+      // ஆஃப்-லிருந்து ஆன் ஆகும்போது மட்டும் (complete ஆகும்போது) toast காட்டப்படும்
+      if (!wasOn) {
+        showMotivationToast()
+      }
+      return {
+        ...prev,
+        [day]: {
+          ...prev[day],
+          [prayerId]: !wasOn,
+        },
+      }
+    })
   }
 
   const resetAll = () => {
@@ -164,6 +192,65 @@ export default function App() {
 
   return (
     <div>
+      <style>{`
+        @keyframes pt-toast-in {
+          0% { opacity: 0; transform: translate(-50%, 14px) scale(0.92); }
+          60% { opacity: 1; transform: translate(-50%, -4px) scale(1.02); }
+          100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+        }
+        @keyframes pt-toast-out {
+          0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+          100% { opacity: 0; transform: translate(-50%, -10px) scale(0.96); }
+        }
+        @keyframes pt-toast-glow {
+          0%, 100% { box-shadow: 0 4px 18px rgba(201, 162, 39, 0.35); }
+          50% { box-shadow: 0 4px 26px rgba(201, 162, 39, 0.6); }
+        }
+        @keyframes pt-star-pop {
+          0% { opacity: 0; transform: scale(0) rotate(0deg); }
+          40% { opacity: 1; transform: scale(1.3) rotate(80deg); }
+          100% { opacity: 0.9; transform: scale(1) rotate(160deg); }
+        }
+        .pt-toast-wrap {
+          position: fixed;
+          left: 50%;
+          bottom: 32px;
+          z-index: 9999;
+          pointer-events: none;
+        }
+        .pt-toast {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: linear-gradient(135deg, #0F3D3E, #145654);
+          color: #F6EFD8;
+          padding: 12px 20px;
+          border-radius: 999px;
+          font-size: 15px;
+          font-weight: 600;
+          letter-spacing: 0.2px;
+          white-space: nowrap;
+          border: 1px solid rgba(201, 162, 39, 0.55);
+          animation:
+            pt-toast-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+            pt-toast-glow 1.4s ease-in-out 0.45s infinite,
+            pt-toast-out 0.35s ease-in forwards 2.05s;
+        }
+        .pt-toast-star {
+          font-size: 16px;
+          animation: pt-star-pop 0.6s ease-out;
+        }
+        .pt-prayer-btn {
+          transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+        }
+        .pt-prayer-btn.on {
+          animation: pt-toast-glow 1.2s ease-in-out 1;
+        }
+        .pt-prayer-btn:active {
+          transform: scale(0.94);
+        }
+      `}</style>
+
       <header className="pt-header">
         <svg className="pt-crescent" viewBox="0 0 48 48" fill="none">
           <path
@@ -257,6 +344,15 @@ export default function App() {
           உங்கள் பதிவுகள் இந்த browser-ல் தானாக சேமிக்கப்படும்.
         </p>
       </div>
+
+      {toast && (
+        <div className="pt-toast-wrap" key={toast.id}>
+          <div className="pt-toast">
+            <span className="pt-toast-star">✦</span>
+            <span>{MOTIVATION_MESSAGE}</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
