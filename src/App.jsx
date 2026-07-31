@@ -194,13 +194,13 @@ export default function App() {
     <div>
       <style>{`
         @keyframes pt-toast-in {
-          0% { opacity: 0; transform: translate(-50%, 14px) scale(0.92); }
-          60% { opacity: 1; transform: translate(-50%, -4px) scale(1.02); }
-          100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+          0% { opacity: 0; transform: translateY(14px) scale(0.92); }
+          60% { opacity: 1; transform: translateY(-4px) scale(1.02); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
         }
         @keyframes pt-toast-out {
-          0% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-          100% { opacity: 0; transform: translate(-50%, -10px) scale(0.96); }
+          0% { opacity: 1; transform: translateY(0) scale(1); }
+          100% { opacity: 0; transform: translateY(-10px) scale(0.96); }
         }
         @keyframes pt-toast-glow {
           0%, 100% { box-shadow: 0 4px 18px rgba(201, 162, 39, 0.35); }
@@ -213,9 +213,14 @@ export default function App() {
         }
         .pt-toast-wrap {
           position: fixed;
-          left: 50%;
+          left: 0;
+          right: 0;
           bottom: 32px;
           z-index: 9999;
+          display: flex;
+          justify-content: center;
+          padding: 0 16px;
+          box-sizing: border-box;
           pointer-events: none;
         }
         .pt-toast {
@@ -229,15 +234,26 @@ export default function App() {
           font-size: 15px;
           font-weight: 600;
           letter-spacing: 0.2px;
-          white-space: nowrap;
+          white-space: normal;
+          text-align: center;
+          max-width: 100%;
+          box-sizing: border-box;
           border: 1px solid rgba(201, 162, 39, 0.55);
           animation:
             pt-toast-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards,
             pt-toast-glow 1.4s ease-in-out 0.45s infinite,
             pt-toast-out 0.35s ease-in forwards 2.05s;
         }
+        @media (max-width: 420px) {
+          .pt-toast {
+            font-size: 13px;
+            padding: 10px 16px;
+            border-radius: 18px;
+          }
+        }
         .pt-toast-star {
           font-size: 16px;
+          flex-shrink: 0;
           animation: pt-star-pop 0.6s ease-out;
         }
         .pt-prayer-btn {
